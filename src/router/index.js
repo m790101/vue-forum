@@ -35,6 +35,16 @@ const routes = [
     component: ()=>import('../views/RestaurantsTop')
   },
   {
+    path: '/restaurants/:id/dashboard',
+    name: 'restaurant-dashboard',
+    component: ()=>import('../views/RestaurantDashboard')
+  },
+  {
+    path: '/restaurants/:id',
+    name: 'restaurant-single',
+    component: ()=>import('../views/RestaurantSingle')
+  },
+  {
     path: '/users/top',
     name: 'users-top',
     component: ()=>import('../views/UsersTop')
