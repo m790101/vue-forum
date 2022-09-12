@@ -20,6 +20,11 @@ const routes = [
     component: Signup
   },
   {
+      path: '/admin',
+      exact: true,
+      redirect: '/admin/restaurants'
+    },
+  {
     path: '/restaurants',
     name: 'reastaurants',
     component: Restaurants
@@ -43,6 +48,36 @@ const routes = [
     path: '/restaurants/:id',
     name: 'restaurant-single',
     component: ()=>import('../views/RestaurantSingle')
+  },
+  {
+    path: '/admin/restaurants',
+    name: 'admin-restaurants',
+    component: () => import('../views/AdminRestaurants.vue')
+  },
+  {
+    path: '/admin/categories',
+    name: 'admin-categories',
+    component: () => import('../views/AdminCategories.vue')
+  },
+  {
+    path: '/admin/restaurants/new',
+    name: 'admin-restaurant-new',
+    component: () => import('../views/AdminRestaurantNew.vue')
+  },
+  {
+    path: '/admin/restaurants/:id/edit',
+    name: 'admin-restaurant-edit',
+    component: () => import('../views/AdminRestaurantEdit.vue')
+  },
+  {
+    path: '/admin/restaurants/:id',
+    name: 'admin-restaurant',
+    component: () => import('../views/AdminRestaurant.vue')
+  },
+  {
+    path: '/users/:id/edit',
+    name: 'user-edit',
+    component: ()=>import('../views/UserEdit')
   },
   {
     path: '/users/top',

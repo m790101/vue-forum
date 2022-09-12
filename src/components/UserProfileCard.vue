@@ -29,7 +29,7 @@
             </li>
           </ul>
           <p v-if="currentUser.id === userProfile.id ">
-            <router-link to="/users/2/edit"
+            <router-link :to="{name:'user-edit',params:{id:currentUser.id}}"
               ><button type="submit" class="btn btn-primary" >edit</button></router-link
             >
           </p>
