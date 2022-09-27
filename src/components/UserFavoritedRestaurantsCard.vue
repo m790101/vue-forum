@@ -2,7 +2,7 @@
   <div class="card">
     <div class="card-header"><strong>{{userProfile.favoritedRestaurants.length}}</strong> 收藏的餐廳</div>
     <div class="card-body d-flex flex-wrap">
-      <router-link :to="{name:'restaurant-single',params:{id:favoritedRestaurant.id}}" v-for="favoritedRestaurant in userProfile.favoritedRestaurants" :key="favoritedRestaurant.id">
+      <router-link :to="{name:'restaurant',params:{id:favoritedRestaurant.id}}" v-for="favoritedRestaurant in userProfile.favoritedRestaurants" :key="favoritedRestaurant.id">
         <img
           :src="favoritedRestaurant.image"
           width="60"

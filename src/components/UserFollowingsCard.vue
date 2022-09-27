@@ -22,7 +22,7 @@ export default {
   props: {
     userProfile: {
       type: Object,
-      required: true,
+      default: () => [],
     },
   },
 };

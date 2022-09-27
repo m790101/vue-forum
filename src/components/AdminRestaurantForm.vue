@@ -1,5 +1,5 @@
 <template>
-  <form @submit.stop.prevent="handleSubmit">
+  <form v-show="!isLoading" @submit.stop.prevent="handleSubmit">
     <div class="form-group">
       <label for="name">Name</label>
       <input
@@ -81,13 +81,13 @@
 
     <div class="form-group">
       <label for="image">Image</label>
-       <img
+      <img
         v-if="restaurant.image"
         :src="restaurant.image"
         class="d-block img-thumbnail mb-3"
         width="200"
         height="200"
-      >
+      />
       <input
         id="image"
         type="file"
@@ -98,59 +98,22 @@
       />
     </div>
 
-    <button type="submit" class="btn btn-primary" >送出</button>
+    <button type="submit" class="btn btn-primary" :disabled="isProcessing">
+      {{ isProcessing ? "處理中..." : "送出" }}
+    </button>
   </form>
 </template>
 
 
 <script>
-const dummyData = {
-  categories: [
-    {
-      id: 1,
-      name: "中式料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    {
-      id: 2,
-      name: "日本料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    {
-      id: 3,
-      name: "義大利料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    {
-      id: 4,
-      name: "墨西哥料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-  ],
-};
+import adminAPI from "./../apis/admin";
+import { Toast } from "./../utils/helpers";
 
 export default {
-    props:{
-        initialRestaurant:{
-            type: Object,
-            default: () => ({
-                name: '',
-                categoryId: '',
-                tel: '',
-                address: '',
-                description: '',
-                image: '',
-                openingHours: '',
-      })
-        }
-    },
-  data() {
-    return {
-      restaurant: {
+  props: {
+    initialRestaurant: {
+      type: Object,
+      default: () => ({
         name: "",
         categoryId: "",
         tel: "",
@@ -158,20 +121,43 @@ export default {
         description: "",
         image: "",
         openingHours: "",
+      }),
+    },
+    isProcessing: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      restaurant: {
+        ...this.initialRestaurant
       },
       categories: [],
+      isLoading: true,
     };
   },
-created () {
-    this.fetchCategories()
+  created() {
+    this.fetchCategories();
     this.restaurant = {
       ...this.restaurant,
-      ...this.initialRestaurant
-    }
+      ...this.initialRestaurant,
+    };
   },
   methods: {
-    fetchCategories() {
-      this.categories = dummyData.categories;
+    async fetchCategories() {
+      try {
+        const response = await adminAPI.categories.get();
+        const { categories } = response.data;
+        this.categories = categories;
+        this.isLoading = false;
+      } catch (err) {
+        this.isLoading = false;
+        Toast.fire({
+          icon: "error",
+          title: "無法取得餐廳類別，請稍後再試",
+        });
+      }
     },
     handleFileChange(e) {
       const files = e.target.files;
@@ -181,17 +167,42 @@ created () {
       } else {
         // 否則產生預覽圖
         const imageURL = window.URL.createObjectURL(files[0]);
-        console.log(imageURL)
+        console.log(imageURL);
         this.restaurant.image = imageURL;
       }
     },
-    handleSubmit(e){
-        const form = e.target
-        const formData = new FormData(form)
-        for (let [name, value] of formData.entries()) {
-        console.log(name + ': ' + value)
+    handleSubmit(e) {
+        if (!this.restaurant.name) {
+        Toast.fire({
+          icon: 'warning',
+          title: '請填寫餐廳名稱'
+        })
+        return
+      } else if (!this.restaurant.categoryId) {
+        Toast.fire({
+          icon: 'warning',
+          title: '請選擇餐廳類別'
+        })
+        return
+      }
+      const form = e.target;
+      const formData = new FormData(form);
+      this.$emit("after-submit", formData);
+    },
+  },
+    watch: {
+    initialRestaurant (newValue) {
+      this.restaurant = {
+        ...this.restaurant,
+        ...newValue
       }
     }
+  },
+  beforeRouteUpdate (to, from, next) {
+    // 路由改變時重新抓取資料
+    const { id } = to.params
+    this.fetchRestaurant(id)
+    next()
   },
 };
 </script>

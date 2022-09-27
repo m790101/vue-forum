@@ -26,8 +26,13 @@ const routes = [
     },
   {
     path: '/restaurants',
-    name: 'reastaurants',
+    name: 'restaurants',
     component: Restaurants
+  },
+  {
+    path: '/',
+    name: 'root',
+    redirect: '/signin'
   },
   {
     path: '/restaurants/feeds',
@@ -46,7 +51,7 @@ const routes = [
   },
   {
     path: '/restaurants/:id',
-    name: 'restaurant-single',
+    name: 'restaurant',
     component: ()=>import('../views/RestaurantSingle')
   },
   {
@@ -94,6 +99,7 @@ const routes = [
     name: 'user',
     component: ()=>import('../views/User')
   },
+
   {
     path: '*',
     name: 'not-found',

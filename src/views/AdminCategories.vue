@@ -47,9 +47,13 @@
               type="text"
               class="form-control"
             />
-            <span v-show="category.isEditing" class="cancel"
-            @click="handleCancel(category.id)"
-            > ✕ </span>
+            <span
+              v-show="category.isEditing"
+              class="cancel"
+              @click="handleCancel(category.id)"
+            >
+              ✕
+            </span>
           </td>
           <td class="d-flex justify-content-between">
             <button
@@ -64,7 +68,9 @@
               v-show="category.isEditing"
               type="button"
               class="btn btn-link mr-2"
-               @click.stop.prevent="updateCategory({ categoryId: category.id, name: category.name })"
+              @click.stop.prevent="
+                updateCategory({ categoryId: category.id, name: category.name })
+              "
             >
               Save
             </button>
@@ -72,7 +78,6 @@
               type="button"
               class="btn btn-link mr-2"
               @click.stop.prevent="deleteCategory(category.id)"
-              
             >
               Delete
             </button>
@@ -85,36 +90,8 @@
 
 <script>
 import AdminNav from "@/components/AdminNav";
-import { v4 as uuidv4 } from "uuid";
-//  2. 定義暫時使用的資料
-const dummyData = {
-  categories: [
-    {
-      id: 1,
-      name: "中式料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    {
-      id: 2,
-      name: "日本料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    {
-      id: 3,
-      name: "義大利料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    {
-      id: 4,
-      name: "墨西哥料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-  ],
-};
+import adminAPI from "./../apis/admin";
+import { Toast } from "./../utils/helpers";
 
 export default {
   components: {
@@ -132,23 +109,52 @@ export default {
     this.fetchCategories();
   },
   methods: {
-    // 4. 定義 `fetchCategories` 方法，把 `dummyData` 帶入 Vue 物件
-    fetchCategories() {
-      this.categories = dummyData.categories.map((category) => ({
-        ...category,
-        isEditing: false,
-        nameCached: ''
-      }));
+    async fetchCategories() {
+      try {
+        const { data } = await adminAPI.categories.get();
+        this.categories = data.categories.map((category) => ({
+          ...category,
+          isEditing: false,
+          nameCached: "",
+        }));
+      } catch (err) {
+        Toast.fire({
+          icon: "error",
+          title: "無法取得分類資料，請稍後再試",
+        });
+      }
     },
-    createCategory() {
-      this.categories.push({
-        id: uuidv4(),
-        name: this.newCategoryName,
-      });
-      this.newCategoryName = "";
+    async createCategory() {
+      try {
+        const { data } = await adminAPI.categories.create({
+          name: this.newCategoryName,
+        });
+        if (data.status === "error") throw new Error();
+        console.log(data);
+        this.categories.push({
+          id: data.categoryId,
+          name: this.newCategoryName,
+        });
+        this.newCategoryName = "";
+      } catch (err) {
+        Toast.fire({
+          icon: "error",
+          title: "無法取得分類資料，請稍後再試",
+        });
+      }
     },
-    deleteCategory(categoryId) {
-      this.categories = this.categories.filter((x) => x.id !== categoryId);
+    async deleteCategory(categoryId) {
+         try {
+        const { data } = await adminAPI.categories.delete({categoryId});
+        if (data.status === "error") throw new Error()
+        this.categories = this.categories.filter(x => x.id !== categoryId);
+
+      } catch (err) {
+        Toast.fire({
+          icon: "error",
+          title: "無法刪除分類資料，請稍後再試",
+        });
+      }
     },
     toggleIsEditing(categoryId) {
       this.categories = this.categories.map((category) => {
@@ -163,26 +169,35 @@ export default {
         return category;
       });
     },
-    updateCategory ({ categoryId, name }) {
-      // TODO: 透過 API 去向伺服器更新餐廳類別名稱
-      console.log(name)
-      this.toggleIsEditing(categoryId)
-    },
-    handleCancel (categoryId) {
-  this.categories = this.categories.map(category => {
-    if (category.id === categoryId) {
-      return {
-        ...category,
+    async updateCategory({ categoryId, name }) {
+      try {
+        const { data } = await adminAPI.categories.update({ categoryId,name });
+        if (data.status === "error") throw new Error()
+        this.toggleIsEditing(categoryId);
 
-        // 把原本的餐廳類別名稱還回去
-        name: category.nameCached
+      } catch (err) {
+        Toast.fire({
+          icon: "error",
+          title: "無法刪除分類資料，請稍後再試",
+        });
       }
-    }
-    return category
-  })
 
-  this.toggleIsEditing(categoryId)
-}
+    },
+    handleCancel(categoryId) {
+      this.categories = this.categories.map((category) => {
+        if (category.id === categoryId) {
+          return {
+            ...category,
+
+            // 把原本的餐廳類別名稱還回去
+            name: category.nameCached,
+          };
+        }
+        return category;
+      });
+
+      this.toggleIsEditing(categoryId);
+    },
   },
 };
 </script>
