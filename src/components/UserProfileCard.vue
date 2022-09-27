@@ -2,54 +2,54 @@
   <div class="card mb-3">
     <div class="row no-gutters">
       <div class="col-md-4">
-        <img
-          :src="userProfile.image"
-          width="300px"
-          height="300px"
-        />
+        <img :src="user.image | emptyImage" width="300px" height="300px" />
       </div>
       <div class="col-md-8">
         <div class="card-body">
-          <h5 class="card-title">{{ userProfile.name }}</h5>
+          <h5 class="card-title">{{ user.name }}</h5>
           <p class="card-text">
-            {{ userProfile.email }}
+            {{ user.email }}
           </p>
           <ul class="list-unstyled list-inline">
             <li>
-              <strong>{{ userProfile.comments.length }}</strong> 已評論餐廳
+              <strong>{{ user.comments.length }}</strong> 已評論餐廳
             </li>
             <li>
-              <strong>{{ userProfile.favoritedRestaurants.length }}</strong> 收藏的餐廳
+              <strong>{{ user.favoritedRestaurants.length }}</strong>
+              收藏的餐廳
             </li>
             <li>
-              <strong>{{ userProfile.followings.length }}</strong> followings (追蹤者)
+              <strong>{{ user.followings.length }}</strong> followings (追蹤者)
             </li>
             <li>
-              <strong>{{ userProfile.followers.length }}</strong> followers (追隨者)
+              <strong>{{ user.followers.length }}</strong> followers (追隨者)
             </li>
           </ul>
-          <p v-if="currentUser.id === userProfile.id ">
-            <router-link :to="{name:'user-edit',params:{id:currentUser.id}}"
-              ><button type="submit" class="btn btn-primary" >edit</button></router-link
+          <p v-if="currentUser.id === user.id">
+            <router-link
+              :to="{ name: 'user-edit', params: { id: currentUser.id } }"
+              ><button type="submit" class="btn btn-primary">
+                edit
+              </button></router-link
             >
           </p>
           <p v-else>
-              <button
-            type="button"
-            class="btn btn-danger"
-            v-if="userProfile.isFollowed"
-            @click.stop.prevent="removeFollowed()"
-          >
-            取消追蹤
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            @click.stop.prevent="addFollowed()"
-            v-else
-          >
-            追蹤
-          </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              v-if="user.isFollowed"
+              @click.stop.prevent="deleteFollowing(userProfile.id)"
+            >
+              取消追蹤
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click.stop.prevent="addFollowing(userProfile.id)"
+              v-else
+            >
+              追蹤
+            </button>
           </p>
         </div>
       </div>
@@ -59,16 +59,10 @@
 
 
 <script>
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: '管理者',
-    email: 'root@example.com',
-    image: 'https://i.pravatar.cc/300',
-    isAdmin: true
-  },
-  isAuthenticated: true
-}
+import { emptyImageFilter } from "./../utils/mixins";
+import { mapState } from "vuex";
+import { Toast } from "./../utils/helpers";
+import usersAPI from "./../apis/users";
 export default {
   props: {
     userProfile: {
@@ -76,25 +70,56 @@ export default {
       required: true,
     },
   },
-  data(){
-      return{
-          currentUser: dummyUser.currentUser
-
+  data() {
+    return {
+      user: { ...this.userProfile },
+    };
+  },
+  computed: {
+    ...mapState(["currentUser"]),
+  },
+  mixins: [emptyImageFilter],
+  methods: {
+    async addFollowing(userId) {
+      try {
+        const response = await usersAPI.addFollowing({ userId });
+        if (response.data.status !== "success") throw new Error();
+        this.user = {
+          ...this.user,
+          isFollowed: true,
+        };
+      } catch (err) {
+        console.log(err);
+        Toast.fire({
+          icon: "error",
+          title: "無法加入追蹤，請稍後再試",
+        });
       }
-      },
-      methods:{
-          addFollowed(){
-              this.userProfile ={
-                  ...this.userProfile,
-                  isFollowed:true
-              }
-          },
-          removeFollowed(){
-              this.userProfile ={
-                  ...this.userProfile,
-                  isFollowed:false
-              }
-          },
+    },
+    async deleteFollowing(userId) {
+      try {
+        const response = await usersAPI.deleteFollowing({ userId });
+        if (response.data.status !== "success") throw new Error();
+        this.user = {
+          ...this.user,
+          isFollowed: false,
+        };
+      } catch (err) {
+        console.log(err);
+        Toast.fire({
+          icon: "error",
+          title: "無法取消追蹤，請稍後再試",
+        });
       }
-  }
+    }
+    },
+    watch:{
+      userProfile(newValue){
+        this.user = {
+          ...this.user,
+          ...newValue
+        }
+      }
+    }
+};
 </script>

@@ -51,4 +51,16 @@ export default {
             })
           },
     },
+    users:{
+        get(){
+            return apiHelper.get(`/admin/users/`, {
+                headers: { Authorization: `Bearer ${getToken()}` }
+              })
+        },
+        update({userId}){
+            return apiHelper.put(`/admin/users/${userId}`, {userId}, {
+                headers: { Authorization: `Bearer ${getToken()}` }
+              })
+        }
+    }
 }

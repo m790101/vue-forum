@@ -1,35 +1,22 @@
 <template>
   <div class="container py-5">
     <!-- AdminNav Component -->
-    <AdminNav/>
+    <AdminNav />
     <table class="table">
       <thead class="thead-dark">
         <tr>
-          <th scope="col">
-            #
-          </th>
-          <th scope="col">
-            Email
-          </th>
-          <th scope="col">
-            Role
-          </th>
-          <th
-            scope="col"
-            width="140"
-          >
-            Action
-          </th>
+          <th scope="col">#</th>
+          <th scope="col">Email</th>
+          <th scope="col">Role</th>
+          <th scope="col" width="140">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="user in users" :key="user.id">
-          <th scope="row">
-            1
-          </th>
-          <td>{{user.email}}</td>
-          <td>{{user|role}}</td>
-          <td>
+          <th scope="row">1</th>
+          <td>{{ user.email }}</td>
+          <td>{{ user | role }}</td>
+          <td v-if="user.id !== currentUser.id">
             <button
               type="button"
               class="btn btn-link"
@@ -55,75 +42,63 @@
 
 
 <script>
-import AdminNav from '../components/AdminNav.vue'
-
-const dummyData = {
-    "users": [
-        {
-            "id": 1,
-            "name": "root",
-            "email": "root@example.com",
-            "password": "$2a$10$cfDcq1PWTZR.uirKejSwpu4s5dIZQ8mMuivWaC8C6bI6ZvXIRTfdC",
-            "isAdmin": true,
-            "image": null,
-            "createdAt": "2022-09-08T08:10:09.000Z",
-            "updatedAt": "2022-09-08T08:10:09.000Z"
-        },
-        {
-            "id": 2,
-            "name": "user1",
-            "email": "user1@example.com",
-            "password": "$2a$10$1szKGpM.9l8NatJD3ZFm2eVJYvZ3pUb5K4X/yt4uBdvBIk88qj56q",
-            "isAdmin": false,
-            "image": null,
-            "createdAt": "2022-09-08T08:10:09.000Z",
-            "updatedAt": "2022-09-08T08:10:09.000Z"
-        },
-        {
-            "id": 3,
-            "name": "user2",
-            "email": "user2@example.com",
-            "password": "$2a$10$Mvbo.sUyJGW8s.o9ksTT1OARj683.w71T.h8uqrezQM1Qh82l/WpS",
-            "isAdmin": false,
-            "image": null,
-            "createdAt": "2022-09-08T08:10:09.000Z",
-            "updatedAt": "2022-09-08T08:10:09.000Z"
-        }
-    ]
-}
+import AdminNav from "../components/AdminNav.vue";
+import adminAPI from "./../apis/admin";
+import { Toast } from "./../utils/helpers";
+import { mapState } from "vuex";
 
 export default {
-    data(){
-        return {
-            users:[]
-        }
+  data() {
+    return {
+      users: [],
+    };
+  },
+  components: {
+    AdminNav,
+  },
+  methods: {
+    async fetchData() {
+      try {
+        const { data } = await adminAPI.users.get();
+        this.users = data.users;
+      } catch (err) {
+        Toast.fire({
+          icon: "error",
+          title: "無法讀取資料，請稍後再試",
+        });
+      }
     },
-    components:{
-        AdminNav,
+    async toggleUserRole(userId) {
+      try {
+        const { data } = await adminAPI.users.update({ userId });
+        if (data.status === "error") throw new Error();
+        this.users = this.users.map((user) => {
+          if (user.id === userId) {
+            return (user = {
+              ...user,
+              isAdmin: !user.isAdmin,
+            });
+          }
+          return user;
+        });
+      } catch (err) {
+        Toast.fire({
+          icon: "error",
+          title: "無法更新資料，請稍後再試",
+        });
+      }
     },
-    methods:{
-        fetchData(){
-            this.users = dummyData.users
-        },
-        toggleUserRole(userId){
-            this.users = this.users.map((user)=> {
-                if(user.id === userId){
-                    return user = {
-                        ...user,
-                        isAdmin: !user.isAdmin
-                    }
-                }
-                return user
-            })
-        }
+  },
+  filters: {
+    role(user) {
+      return user.isAdmin ? "admin" : "user";
     },
-    filters:{
-        role(user){
-            return user.isAdmin? 'admin':'user'
-        }
-    },
-    created(){
-        this.fetchData()
-    }
-}
+  },
+  created() {
+    this.fetchData();
+  },
+  computed: {
+    ...mapState(["currentUser"]),
+  },
+};
 </script>

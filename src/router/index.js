@@ -4,6 +4,7 @@ import NotFound from '../views/NotFound'
 import Signin from '../views/Signin'
 import Signup from '../views/Signup'
 import Restaurants from '../views/Restaurants'
+import store from './../store'
 
 Vue.use(VueRouter)
 
@@ -112,6 +113,10 @@ const router = new VueRouter({
   routes
 })
 
+router.beforeEach((to, from, next) => {
+  store.dispatch('fetchCurrentUser')
+  next()
+})
 
 
 export default router
