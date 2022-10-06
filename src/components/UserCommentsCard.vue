@@ -22,5 +22,10 @@ export default {
       required: true,
     },
   },
+  data(){
+    return {
+      isPorcessing: false
+    }
+  }
 };
 </script>
