@@ -13,7 +13,8 @@ export default new Vuex.Store({
       image: '',
       isAdmin: false
     },
-    isAuthenticated: false
+    isAuthenticated: false,
+    token: ''
   },
   getters: {
   },
@@ -26,6 +27,15 @@ export default new Vuex.Store({
       }
       // 將使用者的登入狀態改為 true
       state.isAuthenticated = true
+      state.token = localStorage.getItem('token')
+    },
+    revokeAuthentication(state){
+      state.currentUser = {}
+      state.isAuthenticated = false
+      state.token = ''
+      localStorage.removeItem('token')
+      
+
     }
   },
   actions: {
@@ -40,11 +50,13 @@ export default new Vuex.Store({
           email,
           image,
           isAdmin
-        }
-        )
+        })
+        return true 
       }
       catch(err){
-        console.log(err)
+        console.error('can not fetch user information')
+        commit('revokeAuthentication')
+        return false
       }
     }
   },
